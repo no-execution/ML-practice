@@ -3,6 +3,7 @@ import operator
 from numpy import array
 import matplotlib
 import matplotlib.pyplot as plt
+from os import listdir
 
 
 def file2matrix(filename):
@@ -89,10 +90,38 @@ def get_mr_right():
 	k = classify0((array([a0,a1,a2])-min_val)/fenmu,norm_mat,labels,3)
 	print([None,'屌丝','小有魅力','极有魅力'][int(k)])
 
-def plo(path):
-	fig = plt.figure()
-	a,b = file2matrix(path)
-	a = array(a)
-	b = array(b)
-	return a,b
-	
+#################
+
+def img2vector(filename):
+	returnVect = zeros((1,1024))
+	fr = open(filename)
+	for i in range(32):
+		lineStr = fr.readline()
+		for j in range(32):
+			returnVect[0,32*i+j] = int(lineStr[j])
+	return returnVect
+
+def handwritingClassTest():
+	hwLabels = []
+	trainingFileList = listdir('trainingDigits')
+	m = len(trainingFileList)
+	trainingMat = zeros((m,1024))
+	for i in range(m):
+		fileNameStr = trainingFileList[i]
+		fileStr = fileNameStr.split('.')[0]
+		classNumStr = int(fileStr.split('_')[0]) #9_79代表数字9的第79个测试数据
+		hwLabels.append(classNumStr)
+		trainingMat[i,:] = img2vector('trainingDigits/%s'%fileNameStr)
+	testFileList = listdir('testDigits')
+	errorCount = 0.0
+	mTest = len(testFileList)
+	for i in range(mTest):
+		fileNameStr = testFileList[i]
+		fileStr = fileNameStr.split('.')[0]
+		classNumStr = fileStr.split('_')[0]
+		vectorUnderTest = img2vector('testDigits/%s'%fileNameStr)
+		classfierResult = classify0(vectorUnderTest,trainingMat,hwLabels,3)
+		print('the result is %s'%classfierResult,'the right answer is %s'%classNumStr)
+		if int(classfierResult)!=int(classNumStr):
+			errorCount = errorCount+1.0
+	print('error rate is %f'%(errorCount/float(mTest)))
