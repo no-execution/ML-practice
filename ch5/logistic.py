@@ -41,14 +41,44 @@ def grad_ascent_simply(pre_data_mat,pre_label_mat):
 def grad_ascent_simply_random(pre_data_mat,pre_label_mat):
 	data_mat,label_mat = mat(pre_data_mat),mat(pre_label_mat).transpose()
 	m,n = shape(data_mat)
-	weights = ones((n,1))
+	weights = ones((n,1))  #该函数返回一个列向量。
 	alpha = 0.01
-	for i in range(2000):
+	for i in range(20000):
 		mid = int(random.uniform(0,m))
 		h = sigmoid(float(data_mat[mid] * weights))
 		error = float(label_mat[mid] - h)
 		weights += alpha*error*data_mat[mid].transpose()
 	return weights
+
+def pre_process_data(filename):
+	fr_train = open(filename).readlines()
+	data_set,label_set = [],[]
+	for line in fr_train:
+		data_set.append([float(num) for num in line.split()[:21]])
+		label_set.append(float(line.split()[-1]))
+	return data_set,label_set
+
+def classify(value):
+	res = sigmoid(value)
+	if res > 0.5:
+		return 1
+	else:
+		return 0
+
+def horse_test(filename_train,filename_test):
+	data_train,label_train= pre_process_data(filename_train)
+	data_test,label_test = pre_process_data(filename_test)
+	weights = grad_ascent_simply_random(data_train,label_train)
+	count = 0.0
+	data_test = mat(data_test)
+	n_data = shape(data_test)[0]
+	for i in range(n_data):
+		mid = classify(float(data_test[i] * weights))
+		if mid != label_test[i]:
+			count += 1.0
+	print('the error rate is',count/n_data)
+
+
 
 
 def plot_best_fit(weights):
