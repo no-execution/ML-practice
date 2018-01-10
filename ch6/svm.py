@@ -40,7 +40,7 @@ def smo_simple(pre_data_mat,pre_label_mat,const,error_toler,max_iter):
 			ei = fxi - float(label_mat[i])
 		#也就是说误差超出了可以接受的范围，并且α满足约束条件
 			if ((label_mat[i]*ei < -error_toler) and (alphas[i] < const)) or ((label_mat[i]*ei > error_toler) and (alphas[i]>0)):
-				j = select_jrand(i,m)
+				j = select_jrand(i,m)   #随机选择j
 				fxj = float(multiply(alphas,label_mat).T *(data_mat*data_mat[j,:].T)) + b
 				ej = fxj - float(label_mat[j])
 				alpha_i_old = alphas[i].copy()
@@ -82,9 +82,9 @@ def smo_simple(pre_data_mat,pre_label_mat,const,error_toler,max_iter):
 			alpha_pair_changed += 1
 			print("iter: %d i: %d,alpha_pair_changed %d" %(iter,i,alpha_pair_changed))
 		if alpha_pair_changed == 0:
-			iter += 0
-		else:
 			iter += 1
+		else:
+			iter = 0
 			print("iteration number: %d" %iter)
 	return b,alphas
 
