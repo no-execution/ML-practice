@@ -31,7 +31,7 @@ def smo_simple(pre_data_mat,pre_label_mat,const,error_toler,max_iter):
 	m,n = shape(data_mat)     
 	alphas = mat(zeros((m,1)))     
 	iter = 0 
-	while iter < max_iter:         
+	while (iter < max_iter):         
 		alpha_pair_changed = 0         
 		for i in range(m):
 		#这个fxi是计算WX+b             
@@ -39,7 +39,8 @@ def smo_simple(pre_data_mat,pre_label_mat,const,error_toler,max_iter):
 		#ei是计算结果和实际类别的误差
 			ei = fxi - float(label_mat[i])
 		#也就是说误差超出了可以接受的范围，并且α满足约束条件
-			if ((label_mat[i]*ei < -error_toler) and (alphas[i] < const)) or ((label_mat[i]*ei > error_toler) and (alphas[i]>0)):
+		#注意以下这个条件，你还不是很熟悉，需要再理解理解。
+			if ((abs(label_mat[i]*ei) > error_toler) and (alphas[i] < const)) or ((label_mat[i]*ei > error_toler) and (alphas[i]>0)):
 				j = select_jrand(i,m)   #随机选择j
 				fxj = float(multiply(alphas,label_mat).T *(data_mat*data_mat[j,:].T)) + b
 				ej = fxj - float(label_mat[j])
@@ -57,17 +58,16 @@ def smo_simple(pre_data_mat,pre_label_mat,const,error_toler,max_iter):
 			if l == h:
 				print('l=h')
 				continue
-			eta = 2.0 *data_mat[i,:]*data_mat[j,:].T - data_mat[i,:]*data_mat[i,:].T \
-				- data_mat[j,:]*data_mat[j,:].T
+			eta = 2.0 * data_mat[i,:]*data_mat[j,:].T - data_mat[i,:]*data_mat[i,:].T - data_mat[j,:]*data_mat[j,:].T
 			if eta >= 0:
 				print('eta > 0')
 				continue
-			alphas[j] -= label_mat[j]*(ei-ej)/eta
+			alphas[j] -= label_mat[j]*(ei-ej)/eta    #这个更新alpha的方式有问题，不收敛
 			alphas[j] = clip_alpha(alphas[j],h,l)
 			if (abs(alphas[j] - alpha_j_old) < 0.00001):
 				print('not enough')
 				continue
-			alphas[i] += label_mat[j] * label_mat[i] * (alpha_j_old - alphas[j])
+			alphas[i] += label_mat[j]*label_mat[i]*(alpha_j_old - alphas[j])
 
 			b1 = b - ei - label_mat[i]*(alphas[i] - alpha_i_old)*data_mat[i,:]*data_mat[i,:].T \
 				- label_mat[j]*(alphas[j]-alpha_j_old)*data_mat[i,:]*data_mat[j,:].T
@@ -85,10 +85,14 @@ def smo_simple(pre_data_mat,pre_label_mat,const,error_toler,max_iter):
 			iter += 1
 		else:
 			iter = 0
-			print("iteration number: %d" %iter)
+		print("iteration number: %d" %iter)
 	return b,alphas
 
-def plot_res(data,label,u,b):
+def plot_res(data,label,alphas,b):
+	label = array(label)
+	a = multiply(label,alphas.T)
+	u = a*data
+	b = float(b)
 	import matplotlib.pyplot as plt
 	fig = plt.figure()
 	ax1 = fig.add_subplot(1,1,1)
